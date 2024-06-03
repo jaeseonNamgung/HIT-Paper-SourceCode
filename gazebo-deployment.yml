@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: turtlebot3-gazebo
+  labels:
+    app: ros1
+    node: gazebo
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      node: gazebo
+  template:
+    metadata:
+      labels:
+        node: gazebo
+    spec:
+      containers:
+      - name: gazebo
+        tty: true
+        image: namgungjaeseon/ros-noetic
+        command: ["/bin/bash", "-c"]
+        args: ["source /opt/ros/noetic/setup.bash && source ~/catkin_ws/devel/setup.bash && export TURTLEBOT3_MODEL=burger && roslaunch turtlebot3_gazebo turtlebot3_world.launch"]
+        imagePullPolicy: IfNotPresent
+        tty: true
+        env:
+        - name: ROS_MASTER_URI
+          value: http://rosmaster-service:11311
+        - name: ROS_HOSTNAME
+          value: gazebo-service
+        - name: DISPLAY
+          value: "172.20.69.111:0"
+        volumeMounts:
+        - name: x11-socket
+          mountPath: /tmp/.X11-unix
+      volumes:
+      - name: x11-socket
+        hostPath:
+          path: /tmp/.X11-unix
+          type: Directory
+---   
+apiVersion: v1
+kind: Service
+metadata: 
+  name: gazebo-service
+  labels:
+    app: ros1
+    node: gazebo
+spec:
+  clusterIP: None
+  selector: 
+    node: gazebo

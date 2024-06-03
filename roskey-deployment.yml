@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roskey
+  labels:
+    app: ros1
+    node: roskey
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      node: roskey
+  template:
+    metadata:
+      labels:
+        node: roskey
+    spec:
+      containers:
+      - name: roskey
+        tty: true
+        image: namgungjaeseon/ros-noetic
+        imagePullPolicy: IfNotPresent
+        tty: true
+        env:
+        - name: ROS_MASTER_URI
+          value: http://rosmaster-service:11311
+        - name: ROS_HOSTNAME
+          value: roskey-service
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: roskey-service
+  labels:
+    node: roskey
+spec: 
+  clusterIP: None
+  selector:
+    node: roskey

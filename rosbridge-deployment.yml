@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+    name: rosbridge-deployment
+    labels:
+      app: ros1
+      node: rosbridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      node: rosbridge
+  template:
+    metadata:
+      labels:
+        node: rosbridge
+    spec:
+      containers:
+      - name: rosbridge
+        tty: true
+        image: namgungjaeseon/ros-noetic
+        command: ["/bin/bash", "-c"]
+        args: ["source /opt/ros/noetic/setup.bash && roslaunch rosbridge_server rosbridge_websocket.launch _port:=9090 websocket_external_port:=80 --screen"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9090
+          name: rosbridgeport
+        env:
+        - name: ROS_MASTER_URI
+          value: http://rosmaster-service:11311
+        - name: ROS_HOSTNAME
+          value: rosbridge-service
+        resources:
+          requests: # metrics로 참조할 cpu사용률
+            cpu: 50m
+          limits:
+            cpu: 100m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rosbridge-service
+  labels:
+    app: ros1
+    node: rosbridge
+spec:
+  clusterIP: None
+  ports: 
+    - port: 9090
+  selector:
+    node: rosbridge

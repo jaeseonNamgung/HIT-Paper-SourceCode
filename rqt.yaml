@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rqt
+  labels:
+    app: ros1
+    node: rqt
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      node: rqt
+  template:
+    metadata:
+      labels:
+        node: rqt
+    spec:
+      containers:
+      - name: rqt
+        tty: true
+        image: namgungjaeseon/ros-noetic
+        command: ["/bin/bash", "-c"]
+        args: ["source /opt/ros/noetic/setup.bash && source ~/catkin_ws/devel/setup.bash && rosrun rqt_tf_tree rqt_tf_tree"]
+        imagePullPolicy: IfNotPresent
+        tty: true
+        env:
+        - name: ROS_MASTER_URI
+          value: http://rosmaster-service:11311
+        - name: ROS_HOSTNAME
+          value: rqt-service
+        - name: DISPLAY
+          value: "172.24.224.1:0"
+        volumeMounts:
+        - name: x11-socket
+          mountPath: /tmp/.X11-unix
+      volumes:
+      - name: x11-socket
+        hostPath:
+          path: /tmp/.X11-unix
+          type: Directory
+---   
+apiVersion: v1
+kind: Service
+metadata: 
+  name: rqt-service
+  labels:
+    app: ros1
+    node: rqt
+spec:
+  clusterIP: None
+  selector: 
+    node: rqt

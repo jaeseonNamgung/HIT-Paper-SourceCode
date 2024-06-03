@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: spring-boot-deployment
+    labels: 
+      app: web
+      node: spring-boot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      node: spring-boot
+  template:
+    metadata:
+      labels:
+        node: spring-boot
+    spec:
+      containers:
+      - name: spring-boot
+        image: namgungjaeseon/ros-web
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+          name: springbootport
+        env: 
+        - name: ROSBRIDGE_URL 
+          value: ws://rosbridge-service:9090
+        resources:
+          requests: # metrics로 참조할 cpu사용률
+            cpu: 50m
+            memory: 5Mi
+          limits:
+            cpu: 100m
+            memory: 20Mi
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: springboot-service
+  labels: 
+    app: web
+    node: spring-boot
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 8081
+      protocol: TCP    
+      name: http
+      nodePort: 30000
+  selector:
+    node: spring-boot
