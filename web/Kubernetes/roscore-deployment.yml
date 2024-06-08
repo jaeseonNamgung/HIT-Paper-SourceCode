@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roscore-deployment
+  labels:
+    app: ros1
+    node: roscore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      node: roscore
+  template:
+    metadata:
+      labels:
+        node: roscore
+    spec:
+      containers:
+      - name: roscore
+        tty: true
+        image: namgungjaeseon/ros-noetic
+        command: ["/bin/bash", "-c"]
+        args: ["source /opt/ros/noetic/setup.bash && roscore"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 11311 
+          name: roscoreport
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule  
+       
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: rosmaster-service
+  labels:
+    node: roscore
+spec: 
+  clusterIP: None
+  selector:
+    node: roscore

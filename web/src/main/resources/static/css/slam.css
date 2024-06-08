@@ -1,0 +1,14 @@
+body, html{
+    width:100vw;
+    height:auto;
+}
+h1{
+    font-size: 60px;
+    text-align: center;
+}
+#map{
+    margin: auto 0;
+
+    display: flex;
+    justify-content:center;
+}

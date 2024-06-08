@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: turtlebot3-nav
+  labels:
+    app: ros1
+    node: nav
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      node: nav
+  template:
+    metadata:
+      labels:
+        node: nav
+    spec:
+      containers:
+      - name: nav
+        tty: true
+        image: namgungjaeseon/ros-noetic
+        command: ["/bin/bash", "-c"]
+        args: ["source /opt/ros/noetic/setup.bash && source ~/catkin_ws/devel/setup.bash && export TURTLEBOT3_MODEL=burger && roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=/root/../map.yaml"]
+        imagePullPolicy: IfNotPresent
+        tty: true
+        env:
+        - name: ROS_MASTER_URI
+          value: http://rosmaster-service:11311
+        - name: ROS_HOSTNAME
+          value: nav-service
+        - name: DISPLAY
+          value: "172.20.69.111:0"
+        volumeMounts:
+        - name: x11-socket
+          mountPath: /tmp/.X11-unix
+        - name: config-volume
+          mountPath: /map.yaml
+          subPath: map.yaml
+        - name: config-volume
+          mountPath: /map.pgm
+          subPath: map.pgm
+      volumes:
+      - name: x11-socket
+        hostPath:
+          path: /tmp/.X11-unix
+          type: Directory
+      - name: config-volume
+        configMap:
+          name: nav-map
+---   
+apiVersion: v1
+kind: Service
+metadata: 
+  name: nav-service
+  labels:
+    app: ros1
+    node: nav
+spec:
+  clusterIP: None
+  selector: 
+    node: nav
